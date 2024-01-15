@@ -1,0 +1,40 @@
+pipeline {
+    agent {
+        label 'ecs-fargate'
+    }
+    
+    environment {
+        AWS_REGION = 'us-east-1'
+        CLUSTER_NAME = 'ecs-fargate'
+        TASK_DEFINITION = 'ecs-task'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                  git branch: 'main', url: "https://github.com/uzair3399/ecs-fargate-repository.git"
+                checkout scm
+            }
+        }
+
+        stage('Build and Push Docker Image') {
+            steps {
+                script {
+                    sh "docker pull image jenkins/inbound-agent:latest  "
+                    sh " docker build -t jenkins-ecs " 
+
+   
+                }
+            }
+        }
+
+        stage('Deploy to ECS Fargate') {
+            steps {
+                script {
+                    ecs task: 'ecs-task', cluster: 'ecs-fargate', launchType: 'FARGATE', serviceName: 'ecs-fargate-services'
+                }
+            }
+        }
+    }
+}
+
